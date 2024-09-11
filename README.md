@@ -28,6 +28,7 @@ The following packages are used in this repo:
 - MDAnalysis
 - ProLIF
 - neo4j
+- MPyTools
 - PyRosetta (requires academic license)
 
 An example of how to do this is shown below. For PyRosetta installation, replace the username and password as appropriate.
@@ -37,7 +38,7 @@ conda create --name fragnet
 conda activate fragnet -y
 conda install -c conda-forge rdkit -y
 conda install -c https://username:password@west.rosettacommons.org/pyrosetta/conda/release/ pyrosetta -y
-pip install tqdm joblib fragmenstein MDanalysis prolif
+pip install tqdm joblib fragmenstein MDanalysis prolif MPyTools
 git clone https://github.com/schrodinger/pymol-open-source.git && cd pymol-open-source && python setup.py install && cd .. && rm -r pymol-open-source
 ```
 
