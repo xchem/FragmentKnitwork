@@ -10,6 +10,8 @@ from FragmentKnitwork.utils.utils import dump_json, load_json
 from rdkit import Chem
 from rdkit.Chem import Mol
 
+import logging
+logger = logging.getLogger('FragmentKnitwork')
 
 def check_fragment_compatability(molA: Mol, molB: Mol, fragment_overlap=config.FRAGMENT_OVERLAP,
                                  distance=config.FRAGMENT_DISTANCE):
@@ -44,6 +46,9 @@ def generate_substructure_pairs(name_pair, pdbfile_pair, substructure_data, subs
     :param substructure_dir: where they are all saved
     :return: list of passing substructure pairs
     """
+
+    logger.title(f'generate_substructure_pairs({name_pair})')
+
     fragmentA, fragmentB = name_pair[0], name_pair[1]
     protA, protB = pdbfile_pair[0], pdbfile_pair[1]
     subnodes = substructure_data[fragmentA]['subnode']
@@ -90,11 +95,10 @@ def generate_substructure_pairs(name_pair, pdbfile_pair, substructure_data, subs
             else:
                 substructure_pairs.append([subnode, synthon])
 
-
-    print('Number substructure pairs total:', num_substructure_pairs)
-    print('Number substructure pairs after removing bad overlap:', num_good_overlap)
-    print('Number substructure pairs after removing no ints:', num_good_ints)
-    print('\n')
+    if num_substructure_pairs:
+        logger.var('#substructure pairs total', num_substructure_pairs)
+        logger.var('#substructure pairs after removing bad overlap', num_good_overlap)
+        logger.var('#substructure pairs after removing no ints', num_good_ints)
     return substructure_pairs
 
 
@@ -125,14 +129,26 @@ def enumeration(fragment_names: list,
         raise ValueError('Provide mols or mol files for the fragments')
 
     if not mols:
-        mols = [Chem.MolFromMolFile(file) for file in mol_files]
+        try:
+            mols = [Chem.MolFromMolFile(file) for file in mol_files]
+        except OSError as e:
+
+            logger.error(e)
+
+            from pathlib import Path
+
+            for file in mol_files:
+                path = Path(file)
+                logger.var(file, path.exists())
+
+            raise
 
     # get pairs
     name_pairs = list(itertools.permutations(fragment_names, 2))
     smiles_pairs = list(itertools.permutations(fragment_smiles, 2))
     mol_pairs = list(itertools.permutations(mols, 2))
     pdbfile_pairs = list(itertools.permutations(pdb_files, 2))
-    print(len(name_pairs), 'pairs in total')
+    logger.var('#pairs in total', len(name_pairs))
 
     # if there are pairs to ignore, rule them out
     if ignore_pairs:
@@ -160,7 +176,7 @@ def enumeration(fragment_names: list,
         name_pairs = filt_by_bool(name_pairs, res)
         smiles_pairs = filt_by_bool(smiles_pairs, res)
         pdbfile_pairs = filt_by_bool(pdbfile_pairs, res)
-        print(len(name_pairs), 'pairs after removing overlapping mols')
+        logger.var('#pairs after removing overlapping mols', len(name_pairs))
 
     if distance_check:
         res = [check_min_fragment_dist(pair[0], pair[1]) for pair in mol_pairs]
@@ -168,20 +184,25 @@ def enumeration(fragment_names: list,
         name_pairs = filt_by_bool(name_pairs, res)
         smiles_pairs = filt_by_bool(smiles_pairs, res)
         pdbfile_pairs = filt_by_bool(pdbfile_pairs, res)
-        print(len(name_pairs), 'pairs after removing far apart mols')
+        logger.var('#pairs after removing far apart mols', len(name_pairs))
+
+    assert substructure_dir, 'substructure_dir argument required'
+
+    os.system(f'mkdir -pv {substructure_dir}')
 
     # generate substructures if not generated already (checks if directory has any files)
     substructure_data_fname = os.path.join(substructure_dir, 'substructure_files.json')
+
     if os.path.exists(substructure_data_fname):
-        print('Substructure files already in substructure dir -- not regenerating, please check')
+        logger.warning('Substructure files already in substructure dir -- not regenerating, please check')
 
     else:
-        print('Generating substructure files')
+        logger.header('Generating substructure files...')
         process_substructures_into_files(fragment_names,
                                          fragment_smiles,
                                          mol_files,
                                          substructure_dir)
-        print('Substructure files generated')
+        logger.success('Substructure files generated')
 
     substructure_data = load_json(substructure_data_fname)
     substructure_pair_data = {}
@@ -195,12 +216,14 @@ def enumeration(fragment_names: list,
         if len(substructure_pairs) > 0:
             pair_name = f"{name_pair[0]}-{name_pair[1]}"
             substructure_pair_data[pair_name] = substructure_pairs
+        else:
+            logger.warning(f'No substructure pairs found for {name_pair}')
 
-    print(len(substructure_pair_data), 'fragment pairs with expansions after enumeration')
+    logger.var('#fragment pairs with expansions after enumeration', len(substructure_pair_data))
     c = 0
     for pair in substructure_pair_data:
         c += len(substructure_pair_data[pair])
-    print(c, 'substructure pairs for querying after enumeration')
+    logger.var('#substructure pairs for querying after enumeration', c)
     substructure_pair_fname = os.path.join(substructure_dir, 'substructure_pairs.json')
     dump_json(substructure_pair_data, substructure_pair_fname)
     return substructure_pair_fname

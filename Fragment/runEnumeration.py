@@ -3,6 +3,8 @@ import os
 
 from FragmentKnitwork.Fragment.enumerate import enumeration
 
+import logging
+logger = logging.getLogger('FragmentKnitwork')
 
 def runEnumeration(fragment_names, fragment_smiles, target, mol_files, pdb_files, output_dir, ignore_pairs=None,
                    write_smiles_to_file=True, r_group_expansions=True, record_equiv_synthon=True):
@@ -20,10 +22,13 @@ def runEnumeration(fragment_names, fragment_smiles, target, mol_files, pdb_files
     :param record_equiv_synthon:
     :return:
     """
+
+    assert output_dir
+
     # run enumeration for the substructures
     substructure_pair_fname = enumeration(fragment_names, fragment_smiles, target, mol_files=mol_files, pdb_files=pdb_files, substructure_dir=output_dir,
                                           ignore_pairs=ignore_pairs)
-    print('Enumeration finished')
+    logger.success('Enumeration finished')
 
     if write_smiles_to_file:
         # write list of smiles pairs to file -- useful if we want to get an equivalent list for similarity search later
@@ -61,15 +66,15 @@ def runEnumeration(fragment_names, fragment_smiles, target, mol_files, pdb_files
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('--input_txt_file', required=False, help='comma delimited txt file with names, SMILES columns, mol files and apo-desolv pdb files')
-    parser.add_argument('--fragment_names', nargs="+", required=False, help='provide if data is Fragalysis-formatted')
-    parser.add_argument('--target', required=False, help='target name for Fragalysis-formatted data')
+    parser.add_argument('-i','--input_txt_file', required=False, help='comma delimited txt file with names, SMILES columns, mol files and apo-desolv pdb files')
+    parser.add_argument('-f','--fragment_names', nargs="+", required=False, help='provide if data is Fragalysis-formatted')
+    parser.add_argument('-t','--target', required=False, help='target name for Fragalysis-formatted data')
     parser.add_argument('--fragalysis_formatted', action='store_true', help='flag to indicate that data is Fragalysis-formatted')
     parser.add_argument('--write_smiles_to_file', action='store_true', help='write out SMILES pairs to a file ')
     parser.add_argument('--record_equiv_synthon', action='store_true', help='(recommended) record equivalent synthons/subnodes for fragments, used for some of the more complex queries')
     parser.add_argument('--r_group_expansions', action='store_true', help='(recommended) record possible r group expansions for future queries')
     parser.add_argument('--pairs_to_ignore_json', default=None, help='pairs to not run enumeration before, provide in format (remember pairs are asymmetric) [["x0000_2A", "x000_1A"], ["x0000_1A", "x000_2A"]')
-    parser.add_argument('--output_dir', help="where to save the output data")
+    parser.add_argument('-o','--output_dir', help="where to save the output data")
     args = parser.parse_args()
 
     # read data provided -> get the fragment names, smiles and mol files
@@ -83,8 +88,8 @@ def main():
             for row in csv.reader(f, delimiter=','):
                 fragment_names.append(row[0])
                 fragment_smiles.append(row[1])
-                mol_files.append(row[2])
-                pdb_files.append(row[3])
+                mol_files.append(row[2].strip())
+                pdb_files.append(row[3].strip())
 
     if args.fragalysis_formatted:
         from FragmentKnitwork.utils.utils import get_mol, get_smiles, get_protein
@@ -96,7 +101,9 @@ def main():
         fragment_smiles = [get_smiles(args.target, name) for name in fragment_names]
 
     # check if there are any pairs to be ignored (e.g. if you want to focus on pairs between subsites)
-    print(len(fragment_names), 'fragments provided for enumeration')
+        
+    logger.var('#fragments', len(fragment_names))
+
     if args.pairs_to_ignore_json:
         from FragmentKnitwork.utils.utils import load_json
         pairs_to_ignore = load_json(args.pairs_to_ignore_json)
