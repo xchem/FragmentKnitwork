@@ -21,7 +21,7 @@ def load_json(fname):
 
 def dump_json(data, fname):
     with open(fname, 'w') as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)
 
 
 def get_smiles(target, fragment, fragalysis_dir=config.FRAGALYSIS_DATA_DIR, fragalysis_version=config.FRAGALYSIS_VERSION):
