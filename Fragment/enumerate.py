@@ -216,6 +216,7 @@ def enumeration(fragment_names: list,
         if len(substructure_pairs) > 0:
             pair_name = f"{name_pair[0]}-{name_pair[1]}"
             substructure_pair_data[pair_name] = substructure_pairs
+            logger.success(f'Substructure pairs found for {name_pair}')
         else:
             logger.warning(f'No substructure pairs found for {name_pair}')
 
@@ -226,4 +227,8 @@ def enumeration(fragment_names: list,
     logger.var('#substructure pairs for querying after enumeration', c)
     substructure_pair_fname = os.path.join(substructure_dir, 'substructure_pairs.json')
     dump_json(substructure_pair_data, substructure_pair_fname)
+
+    logger.writing(f'{substructure_dir}/fragment.tgz')
+    os.system(f'cd {substructure_dir}; tar -czf fragment.tgz synthon*.mol subnode*.mol substructure_pairs.json')
+
     return substructure_pair_fname
