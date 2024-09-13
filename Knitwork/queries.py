@@ -1,6 +1,9 @@
 from FragmentKnitwork.utils import knitworkConfig as config
 from FragmentKnitwork.utils.dbUtils import driver
 
+import logging
+logger = logging.getLogger('FragmentKnitwork')
+
 
 def single_expansion(smiles: str, query_synthon: str, limit=config.SINGLE_EXPANSION_LIMIT):
     """
@@ -96,7 +99,7 @@ def impure_expansion(smiles: str, vector, query_synthon: str, metric: str = conf
         query = (
             """
             MATCH (a:F2 {smiles: $smiles})<-[:FRAG*0..%(num_hops)d]-(b:F2)<-[e:FRAG]-(c:Mol)
-            WHERE EXISTS(e.prop_pharmfp)
+            WHERE e.prop_pharmfp IS NOT NULL
             WITH usersimilarity.tanimoto_similarity(e.prop_pharmfp, $vector) as sim, c.smiles as smi, e.prop_synthon as syn, c.cmpd_ids as ids
             WHERE sim >= $threshold
             AND NOT e.prop_synthon=$query_synthon
@@ -114,7 +117,7 @@ def impure_expansion(smiles: str, vector, query_synthon: str, metric: str = conf
         query = (
             """
             MATCH (a:F2 {smiles: $smiles})<-[:FRAG*0..%(num_hops)d]-(b:F2)<-[e:FRAG]-(c:Mol)
-            WHERE EXISTS(e.prop_usrcat)
+            WHERE e.prop_usrcat IS NOT NULL
             WITH usersimilarity.usrcat_similarity_xenon(e.prop_usrcat, $vector) as sim, c.smiles as smi, e.prop_synthon as syn, c.cmpd_ids as ids
             WHERE sim >= $threshold
             AND NOT e.prop_synthon=$query_synthon
@@ -170,7 +173,7 @@ def replace_substructure(smiles: str, synthon: str, threshold: float = config.SI
             """
             MATCH (a:F2 {smiles: $smiles})-[e1:FRAG]->(b:F2)<-[e2:FRAG]-(c:Mol)
             WHERE e1.prop_synthon=$synthon
-            AND EXISTS(e2.prop_pharmfp)
+            AND e2.prop_pharmfp IS NOT NULL
             WITH usersimilarity.tanimoto_similarity(e1.prop_pharmfp,e2.prop_pharmfp) as sim, e2.prop_synthon as syn, c.smiles as smi, c.cmpd_ids as ids, b.smiles as intermed1
             WHERE sim >= $threshold
             AND NOT e2.prop_synthon=$synthon
@@ -192,7 +195,7 @@ def replace_substructure(smiles: str, synthon: str, threshold: float = config.SI
             """ 
             MATCH (a:F2 {smiles: $smiles})-[e1:FRAG]->(b:F2)-[e2:FRAG]->(c:F2)<-[e3:FRAG]-(d:F2)<-[e4:FRAG]-(f:Mol)
             WHERE e1.prop_synthon=$synthon
-            AND EXISTS(e4.prop_pharmfp)
+            AND e4.prop_pharmfp IS NOT NULL
             AND NOT e2.prop_synthon=$first_synthon
             AND NOT e2.prop_synthon=e3.prop_synthon
             WITH usersimilarity.tanimoto_similarity(e1.prop_pharmfp,e4.prop_pharmfp) as sim, e4.prop_synthon as syn, f.smiles as smi, f.cmpd_ids as ids, d.smiles as intermed1, c.smiles as intermed2
@@ -228,5 +231,5 @@ def replace_substructure(smiles: str, synthon: str, threshold: float = config.SI
             if not strict:
                 intermed_nodes2.append(res['intermed2'])
     if len(expansions) > 0:
-        print('found', len(expansions), 'replacements for', smiles, synthon)
+        logger.success(f'found {len(expansions)} replacements for {smiles}, {synthon}')
     return expansions, rev_synthons, rev_similarities, rev_cmpd_ids, intermed_nodes1, intermed_nodes2
