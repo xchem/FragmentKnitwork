@@ -11,10 +11,12 @@ from joblib import Parallel, delayed
 from rdkit import Chem
 from tqdm import tqdm
 
+import FragmentKnitwork.utils.Config as config
+
 disable_rdlogger()
 
 
-def _get_ifps(ref_synthon, used_synthon, fB, target, substructure_dir, tmp_dir):
+def _get_ifps(ref_synthon, used_synthon, fB, target, substructure_dir, tmp_dir, fragalysis_dir):
     """
     Get how many interactions are potentially replicated by the replacement substructure with respect to the original
     substructure. Have to iterate through all possible substructure confs (may be multiple matches with the fragment).
@@ -28,7 +30,7 @@ def _get_ifps(ref_synthon, used_synthon, fB, target, substructure_dir, tmp_dir):
     :return:
     """
     ref_synthon_files = get_ref_substructures(ref_synthon, fB, isSynthon=True, asMols=False, substructure_dir=substructure_dir)
-    prot_file = get_protein(target, fB, protonated=True, desolv=True)
+    prot_file = get_protein(target, fB, fragalysis_dir=fragalysis_dir, protonated=True, desolv=True)
 
     intersect_ints = []
     for i, ref_synthon_file in enumerate(ref_synthon_files):
@@ -50,7 +52,7 @@ def _get_ifps(ref_synthon, used_synthon, fB, target, substructure_dir, tmp_dir):
         return max(intersect_ints)
 
 
-def prioritize_data(data, fB, target, substructure_dir, working_dir, n_cpus, new_file, max_run=None):
+def prioritize_data(data, fB, target, substructure_dir, working_dir, n_cpus, new_file, max_run=None, fragalysis_dir=config.FRAGALYSIS_DATA_DIR):
     """
     Prioritize query results using ProLIF -> we prioritize by merges whereby the replacement substructure is predicted
     to make the same interactions as the substructure it was derived from. This is done by quick ph4 embedding of the
@@ -91,7 +93,7 @@ def prioritize_data(data, fB, target, substructure_dir, working_dir, n_cpus, new
     print('Calculating IFPs')
     res = Parallel(n_jobs=n_cpus, backend="multiprocessing")(
         delayed(_get_ifps)(
-            ref_synthon, used_synthon, fB, target, substructure_dir, working_dir
+            ref_synthon, used_synthon, fB, target, substructure_dir, working_dir, fragalysis_dir
         ) for ref_synthon, used_synthon in tqdm(zip(uniq_refs, uniq_used), total=len(uniq_refs))
     )
     print('IFPs calculated, running processing')
