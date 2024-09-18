@@ -29,7 +29,7 @@ def pure_merge(substructure_pair: list, working_dir: str, idx=None, total=None, 
     """
     output_fname = os.path.join(working_dir, f"{substructure_pair}_pure_merge.json")
     if os.path.exists(output_fname):
-        logger.warning('File already exists for this query:', substructure_pair)
+        logger.warning(f'File already exists for this query: {substructure_pair}')
         return load_json(output_fname)
 
     subnode, synthon = substructure_pair.split('*')[0], substructure_pair.split('*')[1]
