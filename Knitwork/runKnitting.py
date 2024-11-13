@@ -184,8 +184,11 @@ def runKnitting(substructure_pair_file, n_parallel, target, working_dir, output_
     for sub_pair, res in zip(substructure_pairs, results):
         output_data[sub_pair] = res
 
-    for fragment_pair in data:
+    n = len(data)
+
+    for i,fragment_pair in enumerate(data):
         fragment_data = {}
+        logger.header(f"{i}/{n}")
         logger.var('fragment_pair', fragment_pair)
         if pure_search:
             output_fname = os.path.join(output_dir, f"{fragment_pair}_pure_merge.json")
@@ -199,10 +202,15 @@ def runKnitting(substructure_pair_file, n_parallel, target, working_dir, output_
 
         if prolif_prioritization:
             logger.header('Prolif prioritization starting')
-            priori_data = prioritize_data(fragment_data, fragment_pair.split('-')[1], target, substructure_dir,
-                          prolif_working, n_parallel, os.path.join(prolif_output, f"{fragment_pair}_{descriptor}_impure_merge.json"),
-                          max_prioritize, fragalysis_dir=fragalysis_dir)
-            logger.success('Prolif prioritization run')
+            try:
+            	priori_data = prioritize_data(fragment_data, fragment_pair.split('-')[1], target, substructure_dir,
+                          	prolif_working, n_parallel, os.path.join(prolif_output, f"{fragment_pair}_{descriptor}_impure_merge.json"),
+                          	max_prioritize, fragalysis_dir=fragalysis_dir)
+            	logger.success('Prolif prioritization run')
+            except ValueError as e:
+                logger.error(f"prolif_priotization error: {e}")
+                logger.error("Skipping fragment pair")
+                continue
 
         if r_group_search:
             logger.header('R group expansion starting')
