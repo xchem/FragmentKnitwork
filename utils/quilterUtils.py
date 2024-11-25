@@ -664,3 +664,31 @@ def calc_prolif_interaction(lig_file, prot_file, lig_protonated=False, interacti
         dump_json(interaction_list, interactions_file)
 
     return interaction_list
+
+
+def split_fragment_pair_string(self, pair):
+    
+    # e.g. z0215a-3vws-a --> z0215a, 3vws-a
+
+    dash_split = pair.split('-')
+
+    if len(dash_split) == 2:
+        return dash_split
+
+    elif len(dash_split) == 3:
+
+        a,b,c = dash_split
+
+        if len(a + b) == 5 and len(c) == 6:
+            return '-'.join([a,b]), c
+        elif len(c + b) == 5 and len(a) == 6:
+            return a, '-'.join([b,c])
+        else:
+            raise NotImplementedError(f"Can't split fragment pair string: {pair}")
+
+    elif len(dash_split) == 4:
+        a,b,c,d = dash_split
+        return '-'.join([a,b]), '-'.join([c,d])
+
+    else:
+        raise NotImplementedError(f"Can't split fragment pair string: {pair}")

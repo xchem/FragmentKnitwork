@@ -7,6 +7,7 @@ from FragmentKnitwork.Knitwork.queries import impure_expansion, pure_expansion
 from FragmentKnitwork.utils import knitworkConfig as config
 import FragmentKnitwork.utils.Config as base_config
 
+from FragmentKnitwork.utils.quilterUtils import split_fragment_pair_string
 from FragmentKnitwork.utils.knitworkUtils import calc_pharm_fp, load_sigFactory
 from FragmentKnitwork.utils.utils import dump_json, load_json
 from joblib import Parallel, delayed
@@ -201,9 +202,13 @@ def runKnitting(substructure_pair_file, n_parallel, target, working_dir, output_
         dump_json(fragment_data, output_fname)
 
         if prolif_prioritization:
+
+            # second_fragment = fragment_pair.split('-')[1]
+            second_fragment = split_fragment_pair_string(fragment_pair)[1]
+
             logger.header('Prolif prioritization starting')
             try:
-            	priori_data = prioritize_data(fragment_data, fragment_pair.split('-')[1], target, substructure_dir,
+            	priori_data = prioritize_data(fragment_data, second_fragment, target, substructure_dir,
                           	prolif_working, n_parallel, os.path.join(prolif_output, f"{fragment_pair}_{descriptor}_impure_merge.json"),
                           	max_prioritize, fragalysis_dir=fragalysis_dir)
             	logger.success('Prolif prioritization run')
