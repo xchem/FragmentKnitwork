@@ -1,7 +1,7 @@
 # this is a customized fdef file used to calculate pharmacophore features for substructures
 # in the paper version, aliphatic rings have been added (to preserved shape)
 # and xenon atoms (which denote attachment points)
-FINGERPRINT_FDEF = 'FeatureswAliphaticXenon.fdef'
+FINGERPRINT_FDEF = '/home/ubuntu/max/FragmentKnitwork/FeatureswAliphaticXenon.fdef'
 FINGERPRINT_MAXPOINTCOUNT = 2                                       # max point count for rdkit pharm fp calculation
 FINGERPRINT_BINS = [(0, 2), (2, 5), (5, 8)]                         # fingerprint binds for rdkit pharm fp calculation
 

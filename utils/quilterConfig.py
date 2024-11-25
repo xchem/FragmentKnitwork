@@ -1,5 +1,5 @@
 ########## config for running alignment with fragmenstein ##########
-ALIGNMENT_FDEF = 'AlignmentFeatures.fdef'                       # these are the features used for aligning the merge to the original fragment substructure ph4s
+ALIGNMENT_FDEF = '/home/ubuntu/max/FragmentKnitwork/AlignmentFeatures.fdef'                       # these are the features used for aligning the merge to the original fragment substructure ph4s
 PH4_RADII = 0.5                                                 # default ph4 radii
 ALIGNMENT_SCORE = 'SuCOS'                                       # how to score the alignment (only supports highest SuCOS right now)
 SCORING_MODE = 'max'                                            # how to select for best score (i.e. max score when evaluating sucos)

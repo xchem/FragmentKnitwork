@@ -220,14 +220,19 @@ def get_ref_substructures(smiles, fragment, isSynthon=False, asMols=True, substr
     :return: either list of mols or fnames
     """
     # load more quickly using a pre-generated json containing dict with files associated with each substructure SMILES
+    fnames = None
     if info_file:
-        data = load_json(os.path.join(substructure_dir, 'substructure_files.json'))
-        if isSynthon:
-            fnames = data[fragment]['synthon'][smiles]
-        else:
-            fnames = data[fragment]['subnode'][smiles]
+        try:        
+            data = load_json(os.path.join(substructure_dir, 'substructure_files.json'))
+            if isSynthon:
+                fnames = data[fragment]['synthon'][smiles]
+            else:
+                fnames = data[fragment]['subnode'][smiles]
+        except KeyError:
+            # print(f"PROBLEM WITH JSON: {os.path.join(substructure_dir, 'substructure_files.json')}")
+            fnames = None
     # otherwise have to check file names
-    else:
+    if not fnames:
         all_files = os.listdir(substructure_dir)
         if isSynthon:
             fnames = [file for file in all_files if 'synthon' in file and smiles in file and fragment in file]
