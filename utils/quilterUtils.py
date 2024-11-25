@@ -666,7 +666,7 @@ def calc_prolif_interaction(lig_file, prot_file, lig_protonated=False, interacti
     return interaction_list
 
 
-def split_fragment_pair_string(self, pair):
+def split_fragment_pair_string(pair):
     
     # e.g. z0215a-3vws-a --> z0215a, 3vws-a
 
