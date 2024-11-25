@@ -207,7 +207,7 @@ def runKnitting(substructure_pair_file, n_parallel, target, working_dir, output_
                           	prolif_working, n_parallel, os.path.join(prolif_output, f"{fragment_pair}_{descriptor}_impure_merge.json"),
                           	max_prioritize, fragalysis_dir=fragalysis_dir)
             	logger.success('Prolif prioritization run')
-            except ValueError as e:
+            except Exception as e:
                 logger.error(f"prolif_priotization error: {e}")
                 logger.error("Skipping fragment pair")
                 continue
